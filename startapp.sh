@@ -15,8 +15,4 @@ export NO_AT_BRIDGE=1
 
 mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME" "$XDG_STATE_HOME"
 
-if ! pulseaudio --check 2>/dev/null; then
-  pulseaudio --start --exit-idle-time=-1 2>/dev/null || true
-fi
-
 exec dbus-launch --exit-with-session /usr/local/bin/lrcget
