@@ -1,23 +1,23 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/crywolf203/unraid-templates/main/lrcget-icon.png" alt="LRCGET for Unraid icon" width="180">
+ <img src="https://raw.githubusercontent.com/crywolf203/unraid-templates/main/lrcget-icon.png" alt="LRCGET for Unraid icon" width="180">
 </p>
 
 <h1 align="center">LRCGET for Unraid</h1>
 
 <p align="center">
-  <strong>Unofficial browser-based Docker container for running LRCGET on Unraid.</strong>
+ <strong>Unofficial browser-based Docker container for running LRCGET on Unraid.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/tranxuanthang/lrcget">
-    <img alt="Upstream LRCGET" src="https://img.shields.io/badge/Upstream-LRCGET-orange?style=for-the-badge">
-  </a>
-  <a href="https://github.com/crywolf203/lrcget-unraid/pkgs/container/lrcget-unraid">
-    <img alt="GHCR Package" src="https://img.shields.io/badge/Image-GHCR-24292f?style=for-the-badge&logo=github">
-  </a>
-  <a href="https://github.com/crywolf203/lrcget-unraid/blob/main/LICENSE">
-    <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge">
-  </a>
+ <a href="https://github.com/tranxuanthang/lrcget">
+ <img alt="Upstream LRCGET" src="https://img.shields.io/badge/Upstream-LRCGET-orange?style=for-the-badge">
+ </a>
+ <a href="https://github.com/crywolf203/lrcget-unraid/pkgs/container/lrcget-unraid">
+ <img alt="GHCR Package" src="https://img.shields.io/badge/Image-GHCR-24292f?style=for-the-badge&logo=github">
+ </a>
+ <a href="https://github.com/crywolf203/lrcget-unraid/blob/main/LICENSE">
+ <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge">
+ </a>
 </p>
 
 ---
