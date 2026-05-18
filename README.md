@@ -451,3 +451,23 @@ https://github.com/tranxuanthang/lrcget
 This container repository is licensed under the MIT License.
 
 LRCGET itself is licensed and maintained by the upstream LRCGET project. See the upstream repository for its license and source code.
+
+## Donations
+
+This project is an unofficial Unraid wrapper for the upstream LRCGET application.
+
+If you find LRCGET useful, please consider supporting the upstream LRCGET/LRCLIB developer first. LRCGET and LRCLIB are developed by the upstream project, while this repository only maintains the Unraid Docker/container experience around that work.
+
+### Support the upstream LRCGET/LRCLIB developer
+
+- [GitHub Sponsors - tranxuanthang](https://github.com/sponsors/tranxuanthang)
+- [Buy Me a Coffee - thangtran](https://www.buymeacoffee.com/thangtran)
+- [PayPal - tranxuanthang98](https://paypal.me/tranxuanthang98)
+
+### Support this Unraid wrapper/template
+
+If this Unraid container/template helped you, you can also support my maintenance work here:
+
+- [Buy Me a Coffee - crywolf203](https://buymeacoffee.com/crywolf203)
+
+Thank you for supporting open-source developers and community-maintained Unraid templates.
