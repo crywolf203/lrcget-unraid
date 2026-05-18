@@ -35,7 +35,7 @@ Upstream LRCGET app
         ▼
 lrcget-unraid Docker image
         │
-        │ Browser GUI on port 5800
+        │ Browser GUI + browser audio on port 5800
         ▼
 Unraid Community Applications
 ```
@@ -79,13 +79,14 @@ http://YOUR-UNRAID-IP:5800
 ## Features
 
 - Browser-based LRCGET desktop interface
+- Browser audio support through the WebUI with `WEB_AUDIO=1`
 - Designed for Unraid Community Applications
 - Uses the upstream LRCGET Linux `.deb` build
 - Persistent app data through `/config`
 - Music library mapping through `/music`
 - Web UI on port `5800`
-- Software-rendering variables included to help avoid black screen issues
-- Works well for large music libraries
+- Software-rendering variables included to help avoid black-screen behavior
+- Tuned for large Unraid music libraries
 - Automated GitHub Actions builds for new upstream LRCGET releases
 
 ---
@@ -171,7 +172,7 @@ Use Read/Write access if you want LRCGET to export `.lrc` sidecar files beside y
 
 | Container Port | Host Port | Required | Purpose |
 |---:|---:|:---:|---|
-| `5800` | `5800` | Yes | Browser-based LRCGET GUI |
+| `5800` | `5800` | Yes | Browser-based LRCGET GUI and browser audio |
 | `5900` | Optional | No | Direct VNC access, usually not needed |
 
 Most Unraid users only need:
@@ -179,6 +180,8 @@ Most Unraid users only need:
 ```text
 5800:5800
 ```
+
+Audio works through the browser WebUI on port `5800`. Direct VNC audio is not required and is not recommended for normal Unraid use.
 
 ---
 
@@ -193,11 +196,12 @@ Most Unraid users only need:
 | `UMASK` | `000` | Helps avoid permission issues when writing `.lrc` files to shared media folders. |
 | `TZ` | `America/New_York` | Sets the container timezone. Change this to your timezone. |
 
-### GUI variables
+### GUI and audio variables
 
 | Variable | Recommended | Description |
 |---|---:|---|
 | `KEEP_APP_RUNNING` | `1` | Restarts the GUI app if it exits. |
+| `WEB_AUDIO` | `1` | Enables browser-based audio streaming from the container WebUI. Audio works through port `5800`, not VNC. |
 | `DISPLAY_WIDTH` | `1920` | Virtual desktop width. |
 | `DISPLAY_HEIGHT` | `1080` | Virtual desktop height. |
 | `ENABLE_CJK_FONT` | `1` | Enables better Chinese/Japanese/Korean character support. |
@@ -273,6 +277,7 @@ services:
       UMASK: "000"
       TZ: "America/New_York"
       KEEP_APP_RUNNING: "1"
+      WEB_AUDIO: "1"
       DISPLAY_WIDTH: "1920"
       DISPLAY_HEIGHT: "1080"
       ENABLE_CJK_FONT: "1"
@@ -306,6 +311,7 @@ docker run -d \
   -e UMASK=000 \
   -e TZ=America/New_York \
   -e KEEP_APP_RUNNING=1 \
+  -e WEB_AUDIO=1 \
   -e DISPLAY_WIDTH=1920 \
   -e DISPLAY_HEIGHT=1080 \
   -e ENABLE_CJK_FONT=1 \
@@ -348,6 +354,16 @@ NO_AT_BRIDGE=1
 ```
 
 This image uses the upstream Linux `.deb` package rather than the AppImage because the `.deb` build has worked better in this browser-based Unraid container setup.
+
+### No audio in the WebUI
+
+Make sure this variable is set:
+
+```text
+WEB_AUDIO=1
+```
+
+Audio works through the browser WebUI on port `5800`, not through VNC. Make sure the browser tab is not muted and that your browser allows audio playback for the Unraid WebUI page.
 
 ### The container fails when using `APP_NICENESS=-10`
 
