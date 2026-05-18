@@ -448,6 +448,8 @@ If this Unraid container/template helped you, you can also support my maintenanc
 
 Thank you for supporting open-source developers and community-maintained Unraid templates.
 
+---
+
 ## Disclaimer
 
 This is an **unofficial** Docker container for LRCGET.
