@@ -58,6 +58,7 @@ jobs:
           push: true
           build-args: |
             LRCGET_VERSION=${{ steps.lrcget.outputs.version }}
+            IMAGE_VERSION=1.0.0
           tags: |
             ghcr.io/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.lrcget.outputs.version }}
