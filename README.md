@@ -59,7 +59,7 @@ ghcr.io/crywolf203/lrcget-unraid:latest
 Versioned tags may also be available:
 
 ```text
-ghcr.io/crywolf203/lrcget-unraid:2.1.0
+ghcr.io/crywolf203/lrcget-unraid:2.2.0
 ```
 
 ---

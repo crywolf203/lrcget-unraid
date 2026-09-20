@@ -2,7 +2,7 @@ FROM jlesage/baseimage-gui:ubuntu-24.04-v4.10.7
 
 # renovate: datasource=github-releases depName=tranxuanthang/lrcget packageName=tranxuanthang/lrcget versioning=semver
 ARG LRCGET_VERSION=2.2.0
-ARG IMAGE_VERSION=1.0.0
+ARG IMAGE_VERSION=1.1.0
 
 LABEL org.opencontainers.image.source="https://github.com/crywolf203/lrcget-unraid"
 LABEL org.opencontainers.image.description="Unofficial browser-based Docker container for LRCGET on Unraid."
