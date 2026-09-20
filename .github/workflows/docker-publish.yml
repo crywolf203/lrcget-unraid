@@ -2,6 +2,21 @@ name: Build and publish Docker image
 
 on:
   workflow_dispatch:
+    inputs:
+      lrcget_version:
+        description: "Optional LRCGET version to build, for example 2.2.0. Leave blank for latest."
+        required: false
+        type: string
+  repository_dispatch:
+    types:
+      - lrcget-release
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - startapp.sh
+      - .github/workflows/docker-publish.yml
   push:
     branches:
       - main
@@ -12,6 +27,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: crywolf203/lrcget-unraid
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  IMAGE_VERSION: 1.0.0
 
 jobs:
   build-and-push:
@@ -25,24 +41,55 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Get latest LRCGET version
+      - name: Resolve LRCGET version
         id: lrcget
         shell: bash
+        env:
+          WORKFLOW_VERSION: ${{ inputs.lrcget_version }}
+          DISPATCH_VERSION: ${{ github.event.client_payload.version }}
         run: |
-          VERSION="$(curl -fsSL https://api.github.com/repos/tranxuanthang/lrcget/releases/latest \
-            | grep '"tag_name":' \
-            | head -n 1 \
-            | sed -E 's/.*"tag_name": *"v?([^"]+)".*/\1/')"
+          set -euo pipefail
+
+          VERSION="${WORKFLOW_VERSION:-}"
+          SOURCE="workflow input"
+
+          if [ -z "$VERSION" ]; then
+            VERSION="${DISPATCH_VERSION:-}"
+            SOURCE="repository dispatch payload"
+          fi
+
+          if [ -z "$VERSION" ] && { [ "$GITHUB_EVENT_NAME" = "push" ] || [ "$GITHUB_EVENT_NAME" = "pull_request" ]; }; then
+            VERSION="$(sed -nE 's/^ARG LRCGET_VERSION=v?([^[:space:]]+).*/\1/p' Dockerfile | head -n 1)"
+            SOURCE="Dockerfile"
+          fi
+
+          if [ -z "$VERSION" ]; then
+            VERSION="$(curl -fsSL https://api.github.com/repos/tranxuanthang/lrcget/releases/latest \
+              | jq -r '.tag_name // empty' \
+              | sed -E 's/^v//')"
+            SOURCE="latest upstream release"
+          fi
+
+          VERSION="${VERSION#v}"
 
           if [ -z "$VERSION" ]; then
             echo "Could not determine latest LRCGET version."
             exit 1
           fi
 
+          DEB_URL="https://github.com/tranxuanthang/lrcget/releases/download/${VERSION}/LRCGET_${VERSION}_amd64.deb"
+          if ! curl -fsI "$DEB_URL" >/dev/null; then
+            echo "Expected LRCGET .deb asset was not found: $DEB_URL"
+            exit 1
+          fi
+
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Latest LRCGET version: $VERSION"
+          echo "source=$SOURCE" >> "$GITHUB_OUTPUT"
+          echo "deb_url=$DEB_URL" >> "$GITHUB_OUTPUT"
+          echo "LRCGET version: $VERSION ($SOURCE)"
 
       - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -50,6 +97,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if LRCGET version image already exists
+        if: github.event_name != 'pull_request'
         id: image_exists
         shell: bash
         run: |
@@ -63,19 +111,43 @@ jobs:
             echo "Image does not exist yet: $IMAGE"
           fi
 
+      - name: Decide build mode
+        id: build_mode
+        shell: bash
+        env:
+          IMAGE_EXISTS: ${{ steps.image_exists.outputs.exists }}
+        run: |
+          set -euo pipefail
+
+          SHOULD_BUILD="true"
+          SHOULD_PUSH="true"
+
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            SHOULD_PUSH="false"
+          fi
+
+          if { [ "$GITHUB_EVENT_NAME" = "schedule" ] || [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; } && [ "${IMAGE_EXISTS:-false}" = "true" ]; then
+            SHOULD_BUILD="false"
+            SHOULD_PUSH="false"
+          fi
+
+          echo "build=$SHOULD_BUILD" >> "$GITHUB_OUTPUT"
+          echo "push=$SHOULD_PUSH" >> "$GITHUB_OUTPUT"
+          echo "build=$SHOULD_BUILD push=$SHOULD_PUSH"
+
       - name: Set up Docker Buildx
-        if: github.event_name != 'schedule' || steps.image_exists.outputs.exists != 'true'
+        if: steps.build_mode.outputs.build == 'true'
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push image
-        if: github.event_name != 'schedule' || steps.image_exists.outputs.exists != 'true'
+      - name: Build image
+        if: steps.build_mode.outputs.build == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ steps.build_mode.outputs.push == 'true' }}
           build-args: |
             LRCGET_VERSION=${{ steps.lrcget.outputs.version }}
-            IMAGE_VERSION=1.0.0
+            IMAGE_VERSION=${{ env.IMAGE_VERSION }}
           tags: |
             ghcr.io/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.lrcget.outputs.version }}
