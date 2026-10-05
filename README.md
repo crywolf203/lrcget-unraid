@@ -15,6 +15,7 @@
  <a href="https://github.com/crywolf203/lrcget-unraid/pkgs/container/lrcget-unraid">
  <img alt="GHCR Package" src="https://img.shields.io/badge/Image-GHCR-24292f?style=for-the-badge&logo=github">
  </a>
+ <a href="https://github.com/crywolf203/lrcget-unraid/pkgs/container/lrcget-unraid"><img alt="GHCR pulls" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fghcr-badge.elias.eu.org%2Fapi%2Fcrywolf203%2Flrcget-unraid%2Flrcget-unraid&amp;query=downloadCount&amp;label=GHCR+pulls&amp;style=for-the-badge&amp;logo=github"></a>
  <a href="https://github.com/crywolf203/lrcget-unraid/blob/main/LICENSE">
  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge">
  </a>
