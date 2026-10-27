@@ -342,6 +342,10 @@ The workflow checks the latest upstream LRCGET release and builds the Docker ima
 
 ### Keeping repository versions in sync
 
+After a successful publication or verification of an existing versioned image on `main`, the workflow also creates a GitHub Release named **LRCGET X.Y.Z for Unraid**, with a `lrcget-X.Y.Z` Git tag, the versioned Docker image, and a link to the upstream release notes. It backfills a missing release on the next successful run, including for 2.2.1. Existing releases and tags are left unchanged; older versions do not replace a newer LRCGET release as Latest. The tag identifies the workflow revision that verified image availability, which can be later than the original image build.
+
+Release creation uses the workflow's built-in token and needs no additional secret. It runs independently of version-sync PRs, only after the image job succeeds; pull requests never publish releases. Historical wrapper releases such as `v1.1.0` keep their original names and tags.
+
 After a successful scheduled, dispatched, or manual build on `main`, the workflow opens or updates one pull request with the published version in the Dockerfile and this README. It also repairs missed updates when the versioned image already exists. Failed builds never update these files, and older manually selected versions cannot lower the displayed version.
 
 Version-only changes are checked against the existing image and do not rebuild it. Changes to the container or workflow still run the Docker build. README-only pushes do not run the publishing workflow.

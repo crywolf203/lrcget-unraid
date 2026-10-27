@@ -184,6 +184,22 @@ jobs:
             ghcr.io/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.lrcget.outputs.version }}
 
+  publish-github-release:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout verified workflow revision
+        uses: actions/checkout@v5
+
+      - name: Publish GitHub release for the available image
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHED_VERSION: ${{ needs.build-and-push.outputs.version }}
+        run: python3 .github/scripts/publish-release.py
+
   sync-published-version:
     needs: build-and-push
     if: >-
