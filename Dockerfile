@@ -1,7 +1,7 @@
 FROM jlesage/baseimage-gui:ubuntu-24.04-v4.10.7
 
 # renovate: datasource=github-releases depName=tranxuanthang/lrcget packageName=tranxuanthang/lrcget versioning=semver
-ARG LRCGET_VERSION=2.2.0
+ARG LRCGET_VERSION=2.2.1
 ARG IMAGE_VERSION=1.1.0
 
 LABEL org.opencontainers.image.source="https://github.com/crywolf203/lrcget-unraid"

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       lrcget_version:
-        description: "Optional LRCGET version to build, for example 2.2.0. Leave blank for latest."
+        description: "Optional LRCGET version to build, for example 2.2.1. Leave blank for latest."
         required: false
         type: string
   repository_dispatch:
@@ -15,13 +15,25 @@ on:
       - main
     paths:
       - Dockerfile
+      - README.md
       - startapp.sh
       - .github/workflows/docker-publish.yml
+      - .github/scripts/**
   push:
     branches:
       - main
+    paths:
+      - Dockerfile
+      - startapp.sh
+      - .github/workflows/docker-publish.yml
+      - .github/scripts/**
   schedule:
     - cron: "0 8 * * *"
+
+# Serialize publishing and sync; PR validation has its own group.
+concurrency:
+  group: lrcget-${{ github.event_name == 'pull_request' && github.ref || 'publish' }}
+  cancel-in-progress: false
 
 env:
   REGISTRY: ghcr.io
@@ -33,6 +45,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.lrcget.outputs.version }}
+
     permissions:
       contents: read
       packages: write
@@ -40,6 +55,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Test version synchronization
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+
+      - name: Detect version-only changes
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python3 .github/scripts/sync-version.py classify
 
       - name: Resolve LRCGET version
         id: lrcget
@@ -72,8 +98,8 @@ jobs:
 
           VERSION="${VERSION#v}"
 
-          if [ -z "$VERSION" ]; then
-            echo "Could not determine latest LRCGET version."
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a stable LRCGET version in major.minor.patch format."
             exit 1
           fi
 
@@ -97,7 +123,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if LRCGET version image already exists
-        if: github.event_name != 'pull_request'
         id: image_exists
         shell: bash
         run: |
@@ -116,6 +141,7 @@ jobs:
         shell: bash
         env:
           IMAGE_EXISTS: ${{ steps.image_exists.outputs.exists }}
+          METADATA_ONLY: ${{ steps.changes.outputs.metadata_only }}
         run: |
           set -euo pipefail
 
@@ -127,6 +153,12 @@ jobs:
           fi
 
           if { [ "$GITHUB_EVENT_NAME" = "schedule" ] || [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; } && [ "${IMAGE_EXISTS:-false}" = "true" ]; then
+            SHOULD_BUILD="false"
+            SHOULD_PUSH="false"
+          fi
+
+          # A published image already validates a version-only change.
+          if [ "${METADATA_ONLY:-false}" = "true" ] && [ "${IMAGE_EXISTS:-false}" = "true" ]; then
             SHOULD_BUILD="false"
             SHOULD_PUSH="false"
           fi
@@ -151,3 +183,59 @@ jobs:
           tags: |
             ghcr.io/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.lrcget.outputs.version }}
+
+  sync-published-version:
+    needs: build-and-push
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'repository_dispatch' ||
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Update displayed version
+        env:
+          PUBLISHED_VERSION: ${{ needs.build-and-push.outputs.version }}
+        run: python3 .github/scripts/sync-version.py update "$PUBLISHED_VERSION"
+
+      - name: Open or update version pull request
+        id: sync_pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.RELEASE_SYNC_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: automation/sync-published-version
+          base: main
+          delete-branch: true
+          add-paths: |
+            Dockerfile
+            README.md
+          commit-message: "chore: sync published LRCGET version"
+          title: "chore: sync published LRCGET version"
+          body: |
+            Synchronize the Dockerfile default and README with the successfully published LRCGET ${{ needs.build-and-push.outputs.version }} image.
+
+            Publication verified by [this workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+            Version-only changes reuse the published image instead of rebuilding it.
+
+      - name: Enable optional auto-merge
+        if: >-
+          vars.RELEASE_SYNC_AUTOMERGE == 'true' &&
+          steps.sync_pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_SYNC_TOKEN }}
+          PR_URL: ${{ steps.sync_pr.outputs.pull-request-url }}
+          PR_SHA: ${{ steps.sync_pr.outputs.pull-request-head-sha }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::Set RELEASE_SYNC_TOKEN for unattended PR checks and auto-merge."
+            exit 0
+          fi
+          gh pr merge --auto --squash --match-head-commit "$PR_SHA" "$PR_URL"

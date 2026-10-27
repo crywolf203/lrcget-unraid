@@ -57,10 +57,10 @@ This container simply makes that desktop app easier to run on Unraid.
 ghcr.io/crywolf203/lrcget-unraid:latest
 ```
 
-Versioned tags may also be available:
+Current published version:
 
 ```text
-ghcr.io/crywolf203/lrcget-unraid:2.2.0
+ghcr.io/crywolf203/lrcget-unraid:2.2.1
 ```
 
 ---
@@ -340,6 +340,22 @@ The workflow checks the latest upstream LRCGET release and builds the Docker ima
 
 ---
 
+### Keeping repository versions in sync
+
+After a successful scheduled, dispatched, or manual build on `main`, the workflow opens or updates one pull request with the published version in the Dockerfile and this README. It also repairs missed updates when the versioned image already exists. Failed builds never update these files, and older manually selected versions cannot lower the displayed version.
+
+Version-only changes are checked against the existing image and do not rebuild it. Changes to the container or workflow still run the Docker build. README-only pushes do not run the publishing workflow.
+
+#### Maintainer setup
+
+- Under **Settings → Actions → General → Workflow permissions**, enable **Allow GitHub Actions to create and approve pull requests**.
+- With the default `GITHUB_TOKEN`, GitHub may require you to approve the generated PR's workflow runs before they start. Review and merge the PR after checks pass.
+- For unattended checks, add a repository secret named `RELEASE_SYNC_TOKEN`: a fine-grained personal access token with **Contents: read/write** and **Pull requests: read/write** for this repository.
+- For unattended merging as well, enable **Allow auto-merge** and squash merging in repository settings, require the `build-and-push` status check on `main`, and set the repository Actions variable `RELEASE_SYNC_AUTOMERGE` to `true`. The workflow requests auto-merge only when the custom token is present; branch protections still apply.
+- Renovate's LRCGET update rule is disabled because the post-publication workflow now owns these version updates.
+
+---
+
 ## Troubleshooting
 
 ### The Web UI opens but the screen is black
@@ -474,4 +490,3 @@ https://github.com/tranxuanthang/lrcget
 This container repository is licensed under the MIT License.
 
 LRCGET itself is licensed and maintained by the upstream LRCGET project. See the upstream repository for its license and source code.
-

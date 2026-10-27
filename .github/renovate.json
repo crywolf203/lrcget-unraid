@@ -9,19 +9,14 @@
   ],
   "packageRules": [
     {
-      "description": "Automatically merge upstream LRCGET release bumps after the Docker build check passes.",
+      "description": "The post-publication workflow owns LRCGET version updates.",
       "matchDatasources": [
         "github-releases"
       ],
       "matchPackageNames": [
         "tranxuanthang/lrcget"
       ],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": false,
-      "commitMessageAction": "Update",
-      "commitMessageTopic": "LRCGET",
-      "commitMessageExtra": "to {{newVersion}}"
+      "enabled": false
     }
   ]
 }
