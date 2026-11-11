@@ -60,7 +60,7 @@ ghcr.io/crywolf203/lrcget-unraid:latest
 Current published version:
 
 ```text
-ghcr.io/crywolf203/lrcget-unraid:2.2.1
+ghcr.io/crywolf203/lrcget-unraid:2.2.2
 ```
 
 ---
